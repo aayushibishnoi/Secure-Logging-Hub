@@ -1,1 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Hub Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.22.10/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
+        const App = () => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [role, setRole] = useState(null);
+            const [logs, setLogs] = useState([]);
+            const [search, setSearch] = useState('');
+
+            const mockAuthenticate = (user, pass) => {
+                const users = {
+                    'admin1': { role: 'admin', password: 'password123' },
+                    'user1': { role: 'user', password: 'password123' },
+                    'user2': { role: 'user', password: 'password123' }
+                };
+                return users[user]?.password === pass ? users[user].role : null;
+            };
+
+            const mockFetchLogs = () => {
+                // Mock log data (in production, fetch from server)
+                return [
+                    { name: 'user1_log.txt', content: 'Test log by user1', owner: 'user1' },
+                    { name: 'user2_log.txt', content: 'Test log by user2', owner: 'user2' }
+                ];
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const userRole = mockAuthenticate(username, password);
+                setRole(userRole);
+                if (userRole === 'admin') {
+                    setLogs(mockFetchLogs());
+                }
+            };
+
+            const filteredLogs = logs.filter(log => 
+                log.name.toLowerCase().includes(search.toLowerCase())
+            );
+
+            return (
+                <div className="min-h-screen bg-gray-100 p-6">
+                    {!role ? (
+                        <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+                            <h2 className="text-2xl font-bold mb-4">Login to Logging Hub</h2>
+                            <form onSubmit={handleLogin}>
+                                <input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full p-2 mb-4 border rounded"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full p-2 mb-4 border rounded"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                                >
+                                    Login
+                                </button>
+                            </form>
+                        </div>
+                    ) : (
+                        <div className="max-w-4xl mx-auto">
+                            <h2 className="text-3xl font-bold mb-6">
+                                Logging Hub Dashboard ({role === 'admin' ? 'Admin' : 'User'})
+                            </h2>
+                            {role === 'admin' && (
+                                <>
+                                    <input
+                                        type="text"
+                                        placeholder="Search logs..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="w-full p-2 mb-4 border rounded"
+                                    />
+                                    <table className="w-full bg-white shadow-md rounded-lg">
+                                        <thead>
+                                            <tr className="bg-gray-200">
+                                                <th className="p-3 text-left">Log File</th>
+                                                <th className="p-3 text-left">Owner</th>
+                                                <th className="p-3 text-left">Content</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredLogs.map((log, index) => (
+                                                <tr key={index} className="border-b">
+                                                    <td className="p-3">{log.name}</td>
+                                                    <td className="p-3">{log.owner}</td>
+                                                    <td className="p-3">{log.content}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </>
+                            )}
+                            {role === 'user' && (
+                                <p className="text-lg">You can write logs to central_logs.</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
